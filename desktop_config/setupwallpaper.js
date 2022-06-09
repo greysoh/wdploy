@@ -51,7 +51,6 @@ await Deno.writeTextFile(Deno.env.get("TEMP") + "\\installWallpaper.bat", `@echo
  reg add "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\Explorer"
  reg add "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\Explorer" /v NoDesktop /t REG_DWORD /d 1 /f
  reg add "HKEY_CURRENT_USER\\Control Panel\\Colors" /v Background /t REG_SZ /d "0 0 0" /f
- RUNDLL32.EXE USER32.DLL,UpdatePerUserSystemParameters 1, True
 `);
 
 await WindowsAPI.executeShell(Deno.env.get("TEMP") + "\\installWallpaper.bat");
