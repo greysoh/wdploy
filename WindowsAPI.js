@@ -1,7 +1,5 @@
-const { ConsoleLogger } = await import(
-  "https://deno.land/x/unilogger@v1.0.3/mod.ts"
-);
-const { installWinget } = await import("./install_winget.js");
+import { ConsoleLogger } from "https://deno.land/x/unilogger@v1.0.3/mod.ts";
+import { installWinget } from "./install_winget.js";
 
 let isShellActive = false;
 
@@ -48,7 +46,11 @@ export function executeShell(cmd) {
         });
 
         break;
-      } catch (e) {}
+      } catch (e) {
+        if (e.toString().startsWith("NotFound")) {
+          return reject(e);
+        }
+      }
     }
 
     const code = await p.status();
@@ -86,27 +88,13 @@ export async function installWingetCMD(Package) {
   });
 
   WingetLog.debug("Checking if winget is installed...");
-
   try {
-    const wingetCheck = await executeShell("winget --version");
+    await executeShell("wkinget --version");
     console.log("");
-
-    if (!wingetCheck.success) {
-      const prompt = await prompt("Winget is not installed. Do you want to install it? (y/n)");
-      
-      if (prompt === "y") {
-        WingetLog.debug("Installing winget...");
-        WingetLog.debug("Calling installWinget()...");
-        await installWinget();
-      } else {
-        WingetLog.fatal("Winget is not installed. Exiting...");
-        return;
-      }
-    }
   } catch (e) {
-    const prompt = await prompt("Winget is not installed. Do you want to install it? (y/n)");
+    const prompt = await confirm("Winget is not installed. Do you want to install it?");
       
-    if (prompt === "y") {
+    if (prompt) {
       WingetLog.debug("Installing winget...");
       WingetLog.debug("Calling installWinget()...");
       await installWinget();

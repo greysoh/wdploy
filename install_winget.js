@@ -1,5 +1,3 @@
-const WindowsAPI = await import("./WindowsAPI.js");
-
 let wingetDeps = [
   {
     path: "https://cdn.glitch.global/f59350b4-4fb2-4f0d-8c76-2905b1a7267f/vclibs.appx?v=1654974147031",
@@ -37,7 +35,30 @@ async function get(source) {
     return response.text();
 }
 
-export default async function installWinget() {
+async function runBatch(string) {
+  try {
+    Deno.removeSync(Deno.env.get("TEMP") + "\\runBatch.bat");
+  } catch (e) {
+    //
+  }
+
+  Deno.writeTextFileSync(Deno.env.get("TEMP") + "\\runBatch.bat", string);
+  await executeShell(Deno.env.get("TEMP") + "\\runBatch.bat");
+}
+
+function executeShell(cmd) {
+  return new Promise(async (resolve, reject) => {
+    let p = Deno.run({
+      cmd: cmd.split(" "),
+    });
+
+    const code = await p.status();
+
+    resolve(code);
+  });
+}
+
+export async function installWinget() {
   console.log("Locating winget...");
   let wingetPath = await get("https://api.github.com/repos/microsoft/winget-cli/releases/latest");
   wingetPath = JSON.parse(wingetPath).assets;
@@ -58,7 +79,7 @@ export default async function installWinget() {
     console.log("Downloading " + i.name);
     await download(i.path, Deno.env.get("TEMP") + "\\" + i.name);
     console.log("Installing " + i.name);
-    await WindowsAPI.runBatch(`@echo off
+    await runBatch(`@echo off
     cd ${Deno.env.get("TEMP")}
     powershell /c "Add-AppxPackage ${i.name}"`);
   }
