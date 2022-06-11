@@ -1,3 +1,5 @@
+const { ConsoleLogger } = await import("https://deno.land/x/unilogger@v1.0.3/mod.ts");
+
 let isShellActive = false;
 
 function sleep(ms) {
