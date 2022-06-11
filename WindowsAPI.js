@@ -1,27 +1,30 @@
-const { ConsoleLogger } = await import("https://deno.land/x/unilogger@v1.0.3/mod.ts");
+const { ConsoleLogger } = await import(
+  "https://deno.land/x/unilogger@v1.0.3/mod.ts"
+);
+const { installWinget } = await import("./install_winget.js");
 
 let isShellActive = false;
 
 function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 async function download(source, destination) {
-    // We use browser fetch API
-    const response = await fetch(source);
-    const blob = await response.blob();
-  
-    // We convert the blob into a typed array
-    // so we can use it to write the data into the file
-    const buf = await blob.arrayBuffer();
-    const data = new Uint8Array(buf);
-  
-    // We then create a new file and write into it
-    const file = await Deno.create(destination);
-    await Deno.writeAll(file, data);
-  
-    // We can finally close the file
-    Deno.close(file.rid);
+  // We use browser fetch API
+  const response = await fetch(source);
+  const blob = await response.blob();
+
+  // We convert the blob into a typed array
+  // so we can use it to write the data into the file
+  const buf = await blob.arrayBuffer();
+  const data = new Uint8Array(buf);
+
+  // We then create a new file and write into it
+  const file = await Deno.create(destination);
+  await Deno.writeAll(file, data);
+
+  // We can finally close the file
+  Deno.close(file.rid);
 }
 
 /**
@@ -84,15 +87,33 @@ export async function installWingetCMD(Package) {
 
   WingetLog.debug("Checking if winget is installed...");
 
-  const wingetCheck = await executeShell("winget --version");
-  console.log("");
+  try {
+    const wingetCheck = await executeShell("winget --version");
+    console.log("");
 
-  if (!wingetCheck.success) {
-    WingetLog.fatal(
-      "Winget installation is not supported. Please install VCLibs, UIXaml, and Winget."
-    );
-
-    return;
+    if (!wingetCheck.success) {
+      const prompt = await prompt("Winget is not installed. Do you want to install it? (y/n)");
+      
+      if (prompt === "y") {
+        WingetLog.debug("Installing winget...");
+        WingetLog.debug("Calling installWinget()...");
+        await installWinget();
+      } else {
+        WingetLog.fatal("Winget is not installed. Exiting...");
+        return;
+      }
+    }
+  } catch (e) {
+    const prompt = await prompt("Winget is not installed. Do you want to install it? (y/n)");
+      
+    if (prompt === "y") {
+      WingetLog.debug("Installing winget...");
+      WingetLog.debug("Calling installWinget()...");
+      await installWinget();
+    } else {
+      WingetLog.fatal("Winget is not installed. Exiting...");
+      return;
+    }
   }
 
   let packageSplit = Package.split(" ");
@@ -108,51 +129,51 @@ export async function installWingetCMD(Package) {
 }
 
 export async function runNinite(opts) {
-    const niniteSrc = await import("./ninite.js");
-    const Console = new ConsoleLogger({
-        tag_string: "{name} |",
-        tag_string_fns: {
-        name: () => "Ninite",
-        },
-    });
-    
-    Console.info("Generating Ninite...");
+  const niniteSrc = await import("./ninite.js");
+  const Console = new ConsoleLogger({
+    tag_string: "{name} |",
+    tag_string_fns: {
+      name: () => "Ninite",
+    },
+  });
 
-    let url = "https://ninite.com/";
+  Console.info("Generating Ninite...");
 
-    let options = opts.split(" ");
-    const ninite = niniteSrc.default;
+  let url = "https://ninite.com/";
 
-    for (let i of options) {
-        const displayNameFind = ninite.find((x) => x.displayName === i);
-        const technicalNameFind = ninite.find((x) => x.technicalName === i);
+  let options = opts.split(" ");
+  const ninite = niniteSrc.default;
 
-        if (displayNameFind == undefined && technicalNameFind == undefined) {
-            Console.error(`${i} is not a valid option.`);
-            continue;
-        } else {
-            let goodFind = {};
-            if (displayNameFind != undefined) goodFind = displayNameFind;
-            if (technicalNameFind != undefined) goodFind = technicalNameFind;
+  for (let i of options) {
+    const displayNameFind = ninite.find((x) => x.displayName === i);
+    const technicalNameFind = ninite.find((x) => x.technicalName === i);
 
-            url += goodFind.technicalName + "-";
-        }
+    if (displayNameFind == undefined && technicalNameFind == undefined) {
+      Console.error(`${i} is not a valid option.`);
+      continue;
+    } else {
+      let goodFind = {};
+      if (displayNameFind != undefined) goodFind = displayNameFind;
+      if (technicalNameFind != undefined) goodFind = technicalNameFind;
+
+      url += goodFind.technicalName + "-";
     }
+  }
 
-    if (url == "https://ninite.com/") {
-        Console.error("No options were selected.");
-        return;
-    }
+  if (url == "https://ninite.com/") {
+    Console.error("No options were selected.");
+    return;
+  }
 
-    url = url.substring(0, url.length - 1);
-    url += "/ninite.exe";
+  url = url.substring(0, url.length - 1);
+  url += "/ninite.exe";
 
-    Console.info("Downloading your Ninite...");
-    await download(url, Deno.env.get("TEMP") + "\\ninite.exe");
+  Console.info("Downloading your Ninite...");
+  await download(url, Deno.env.get("TEMP") + "\\ninite.exe");
 
-    Console.info("Downloaded your Ninite!");
-    Console.info("Running your Ninite...");
-    await executeShell(Deno.env.get("TEMP") + "\\ninite.exe");
+  Console.info("Downloaded your Ninite!");
+  Console.info("Running your Ninite...");
+  await executeShell(Deno.env.get("TEMP") + "\\ninite.exe");
 }
 
 /**
@@ -161,7 +182,7 @@ export async function runNinite(opts) {
  * @returns {string} Command with UAC injection
  */
 export function invokeUAC(cmd) {
-    return `@echo off
+  return `@echo off
     :init
      setlocal DisableDelayedExpansion
      set cmdInvoke=1
@@ -212,28 +233,30 @@ export function invokeUAC(cmd) {
  * @returns {JSON} Status of command
  */
 export async function runReg(array) {
-    let batchScript = invokeUAC(`rem Regedit commands\n\n`);
+  let batchScript = invokeUAC(`rem Regedit commands\n\n`);
 
-    for (let i of array) {
-        function fixString(value) {
-            if (typeof value === "string") {
-                return `"${value}"`;
-            }
+  for (let i of array) {
+    function fixString(value) {
+      if (typeof value === "string") {
+        return `"${value}"`;
+      }
 
-            return value;
-        }
-        
-        if (i.path == null && i.value == null && i.type == null) {
-            batchScript += `reg add "${i.key}" /f\n`;
-        } else if (i.path == null && i.value == null && i.type == "DELETE") {
-            batchScript += `reg delete "${i.key}" /f\n`;
-        } else if (i.value == null && i.type == "DELETE") {
-            batchScript += `reg delete "${i.key}" /v "${i.path}" /f\n`;
-        } else {
-            batchScript += `reg add "${i.key}" /v "${i.path}" /t ${i.type} /d ${fixString(i.value)} /f\n`;
-        }
+      return value;
     }
 
-    const commandOutput = await runBatch(batchScript);
-    return commandOutput;
+    if (i.path == null && i.value == null && i.type == null) {
+      batchScript += `reg add "${i.key}" /f\n`;
+    } else if (i.path == null && i.value == null && i.type == "DELETE") {
+      batchScript += `reg delete "${i.key}" /f\n`;
+    } else if (i.value == null && i.type == "DELETE") {
+      batchScript += `reg delete "${i.key}" /v "${i.path}" /f\n`;
+    } else {
+      batchScript += `reg add "${i.key}" /v "${i.path}" /t ${
+        i.type
+      } /d ${fixString(i.value)} /f\n`;
+    }
+  }
+
+  const commandOutput = await runBatch(batchScript);
+  return commandOutput;
 }
