@@ -6,6 +6,24 @@ function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+async function download(source, destination) {
+    // We use browser fetch API
+    const response = await fetch(source);
+    const blob = await response.blob();
+  
+    // We convert the blob into a typed array
+    // so we can use it to write the data into the file
+    const buf = await blob.arrayBuffer();
+    const data = new Uint8Array(buf);
+  
+    // We then create a new file and write into it
+    const file = await Deno.create(destination);
+    await Deno.writeAll(file, data);
+  
+    // We can finally close the file
+    Deno.close(file.rid);
+}
+
 /**
  * Executes shell command
  * @param {string} cmd Command you want to run
@@ -87,6 +105,54 @@ export async function installWingetCMD(Package) {
       WingetLog.error(`Winget failed to install ${i}`);
     }
   }
+}
+
+export async function runNinite(opts) {
+    const niniteSrc = await import("./ninite.js");
+    const Console = new ConsoleLogger({
+        tag_string: "{name} |",
+        tag_string_fns: {
+        name: () => "Ninite",
+        },
+    });
+    
+    Console.info("Generating Ninite...");
+
+    let url = "https://ninite.com/";
+
+    let options = opts.split(" ");
+    const ninite = niniteSrc.default;
+
+    for (let i of options) {
+        const displayNameFind = ninite.find((x) => x.displayName === i);
+        const technicalNameFind = ninite.find((x) => x.technicalName === i);
+
+        if (displayNameFind == undefined && technicalNameFind == undefined) {
+            Console.error(`${i} is not a valid option.`);
+            continue;
+        } else {
+            let goodFind = {};
+            if (displayNameFind != undefined) goodFind = displayNameFind;
+            if (technicalNameFind != undefined) goodFind = technicalNameFind;
+
+            url += goodFind.technicalName + "-";
+        }
+    }
+
+    if (url == "https://ninite.com/") {
+        Console.error("No options were selected.");
+        return;
+    }
+
+    url = url.substring(0, url.length - 1);
+    url += "/ninite.exe";
+
+    Console.info("Downloading your Ninite...");
+    await download(url, Deno.env.get("TEMP") + "\\ninite.exe");
+
+    Console.info("Downloaded your Ninite!");
+    Console.info("Running your Ninite...");
+    await executeShell(Deno.env.get("TEMP") + "\\ninite.exe");
 }
 
 /**

@@ -1,12 +1,8 @@
 {
     "path": [
         {
-            "name": "InstallMain",
-            "path": "installmain.js"
-        },
-        {
-            "name": "InstallGames",
-            "path": "installgames.js"
+            "name": "InstallApps",
+            "path": "installninite.js"
         },
         {
             "name": "InstallFonts",
