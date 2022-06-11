@@ -18,14 +18,14 @@ await Deno.writeAll(file, data);
 
 Console.info("Writing installer files...")
 
-await Deno.writeTextFile(Deno.env.get("TEMP") + "\\firaCodeInstaller_stage0.bat", `cd "${Deno.env.get("TEMP")}"
+await WindowsAPI.runBatch(`cd "${Deno.env.get("TEMP")}"
 del firaCodeExtract /s /q
 mkdir firaCodeExtract
 move firaCode.zip firaCodeExtract
 cd firaCodeExtract
 tar -xf firaCode.zip`);
 
-await Deno.writeTextFile(Deno.env.get("TEMP") + "\\firaCodeInstaller_stage1.bat", `@echo off
+await WindowsAPI.runBatch(`@echo off
 :init
  setlocal DisableDelayedExpansion
  set cmdInvoke=1
@@ -77,8 +77,5 @@ reg add "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Fonts" /v "FiraC
 reg add "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Fonts" /v "FiraCode Regular (TrueType)" /t REG_SZ /d "FiraCode-Regular.ttf" /f
 reg add "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Fonts" /v "FiraCode Retina (TrueType)" /t REG_SZ /d "FiraCode-Retina.ttf" /f
 reg add "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Fonts" /v "FiraCode SemiBold (TrueType)" /t REG_SZ /d "FiraCode-SemiBold.ttf" /f`);
-
-await WindowsAPI.executeShell(Deno.env.get("TEMP") + "\\firaCodeInstaller_stage0.bat");
-await WindowsAPI.executeShell(Deno.env.get("TEMP") + "\\firaCodeInstaller_stage1.bat");
 
 console.info("FiraCode installed");

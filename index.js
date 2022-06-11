@@ -1,4 +1,5 @@
 import axiod from "https://deno.land/x/axiod/mod.ts";
+import * as WindowsAPI from "./WindowsAPI.js";
 import { ConsoleLogger } from "https://deno.land/x/unilogger@v1.0.3/mod.ts";
 
 const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor;
@@ -10,62 +11,6 @@ const log = new ConsoleLogger({
     name: () => "WDeployInit",
   },
 });
-
-// API for Windows stuff
-const WindowsAPI = {
-  /**
-   * Executes shell command
-   * @param {string} cmd Command you want to run
-   * @returns {object} Status of command
-   */
-  executeShell: async (cmd) => {
-    return new Promise(async (resolve, reject) => {
-      const p = Deno.run({
-        cmd: cmd.split(" "),
-      });
-
-      const code = await p.status();
-
-      resolve(code);
-    });
-  },
-  /**
-   * Installs winget packages
-   * @param {string} Package package list you want to install
-   */
-  installWingetCMD: async (Package) => {
-    const WingetLog = new ConsoleLogger({
-      tag_string: "{name} |",
-      tag_string_fns: {
-        name: () => "Winget",
-      },
-    });
-
-    WingetLog.debug("Checking if winget is installed...");
-
-    const wingetCheck = await WindowsAPI.executeShell("winget --version");
-    console.log("");
-
-    if (!wingetCheck.success) {
-      WingetLog.fatal(
-        "Winget installation is not supported. Please install VCLibs, UIXaml, and Winget."
-      );
-
-      return;
-    }
-
-    let packageSplit = Package.split(" ");
-
-    for (let i of packageSplit) {
-      WingetLog.info(`Installing ${i}...`);
-      let executeStatus = await WindowsAPI.executeShell(`winget install ${i}`);
-
-      if (!executeStatus.success) {
-        WingetLog.error(`Winget failed to install ${i}`);
-      }
-    }
-  },
-};
 
 let json = {};
 

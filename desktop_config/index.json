@@ -1,24 +1,8 @@
 {
     "path": [
         {
-            "name": "InstallMain",
-            "path": "installmain.js"
-        },
-        {
-            "name": "InstallGames",
-            "path": "installgames.js"
-        },
-        {
-            "name": "InstallFonts",
-            "path": "installfonts.js"
-        },
-        {
             "name": "SetupWallpaper",
             "path": "setupwallpaper.js"
-        },
-        {
-            "name": "SetupGit",
-            "path": "setupgit.js"
         }
     ]
 }
