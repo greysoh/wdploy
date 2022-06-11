@@ -1,10 +1,21 @@
+let isShellActive = false;
+
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 /**
  * Executes shell command
  * @param {string} cmd Command you want to run
  * @returns {object} Status of command
  */
-export async function executeShell(cmd) {
+export function executeShell(cmd) {
   return new Promise(async (resolve, reject) => {
+    while (isShellActive) {
+      await sleep(100);
+    }
+    isShellActive = true;
+
     let p = {};
 
     while (true) {
@@ -19,6 +30,7 @@ export async function executeShell(cmd) {
 
     const code = await p.status();
 
+    isShellActive = false;
     resolve(code);
   });
 }
@@ -80,7 +92,7 @@ export async function installWingetCMD(Package) {
  * @param {string} cmd Command you want to run as Admin
  * @returns {string} Command with UAC injection
  */
-export default function invokeUAC(cmd) {
+export function invokeUAC(cmd) {
     return `@echo off
     :init
      setlocal DisableDelayedExpansion
@@ -150,7 +162,7 @@ export async function runReg(array) {
         } else if (i.value == null && i.type == "DELETE") {
             batchScript += `reg delete "${i.key}" /v "${i.path}" /f\n`;
         } else {
-            batchScript += `reg add "${i.key}" /v ${i.path} /t ${i.type} /d ${fixString(i.value)} /f\n`;
+            batchScript += `reg add "${i.key}" /v "${i.path}" /t ${i.type} /d ${fixString(i.value)} /f\n`;
         }
     }
 
