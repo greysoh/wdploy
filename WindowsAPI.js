@@ -48,6 +48,7 @@ export function executeShell(cmd) {
         break;
       } catch (e) {
         if (e.toString().startsWith("NotFound")) {
+          isShellActive = false;
           return reject(e);
         }
       }
@@ -89,7 +90,7 @@ export async function installWingetCMD(Package) {
 
   WingetLog.debug("Checking if winget is installed...");
   try {
-    await executeShell("wkinget --version");
+    await executeShell("wjinget --version");
     console.log("");
   } catch (e) {
     const prompt = await confirm("Winget is not installed. Do you want to install it?");
