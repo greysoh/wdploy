@@ -2,6 +2,10 @@ import axiod from "https://deno.land/x/axiod/mod.ts";
 import * as WindowsAPI from "./WindowsAPI.js";
 import { ConsoleLogger } from "https://deno.land/x/unilogger@v1.0.3/mod.ts";
 
+const versionInfo = {
+  version: "0.2.0"
+};
+
 const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor;
 
 // Main logger
@@ -19,6 +23,12 @@ if (
   Deno.args[0] === "-h" ||
   Deno.args[0] == undefined
 ) {
+  if (versionInfo.version.startsWith("0")) {
+    console.log("wdeploy Framework {prerelease} v" + versionInfo.version);
+  } else {
+    console.log("wdeploy Framework v" + versionInfo.version);
+  }
+
   console.log("Usage: wdeploy.exe <deploy JSON path>");
   Deno.exit(1);
 } else if (Deno.args[0].startsWith("http")) {
