@@ -1,6 +1,8 @@
 import axiod from "https://deno.land/x/axiod/mod.ts";
-import * as WindowsAPI from "./WindowsAPI.js";
 import { ConsoleLogger } from "https://deno.land/x/unilogger@v1.0.3/mod.ts";
+
+import * as WindowsAPI from "./libs/WindowsAPI.js";
+import * as Deployinator from "./libs/Deployinator.js";
 
 const versionInfo = {
   version: "0.2.0"

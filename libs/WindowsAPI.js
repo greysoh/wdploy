@@ -1,28 +1,11 @@
 import { ConsoleLogger } from "https://deno.land/x/unilogger@v1.0.3/mod.ts";
 import { installWinget } from "./install_winget.js";
+import { downloadFile, sleep } from "./Deployinator.js";
 
 let isShellActive = false;
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-async function download(source, destination) {
-  // We use browser fetch API
-  const response = await fetch(source);
-  const blob = await response.blob();
-
-  // We convert the blob into a typed array
-  // so we can use it to write the data into the file
-  const buf = await blob.arrayBuffer();
-  const data = new Uint8Array(buf);
-
-  // We then create a new file and write into it
-  const file = await Deno.create(destination);
-  await Deno.writeAll(file, data);
-
-  // We can finally close the file
-  Deno.close(file.rid);
 }
 
 /**
@@ -117,8 +100,12 @@ export async function installWingetCMD(Package) {
   }
 }
 
+/**
+ * Installs ninite packages, can be used on Windows 7 and above
+ * @param {string} opts Ninite packages to install (see ninite.js for a list)
+ */
 export async function runNinite(opts) {
-  const niniteSrc = await import("./ninite.js");
+  const niniteSrc = await import("../src/ninite.js");
   const Console = new ConsoleLogger({
     tag_string: "{name} |",
     tag_string_fns: {
@@ -158,7 +145,7 @@ export async function runNinite(opts) {
   url += "/ninite.exe";
 
   Console.info("Downloading your Ninite...");
-  await download(url, Deno.env.get("TEMP") + "\\ninite.exe");
+  await downloadFile(url, Deno.env.get("TEMP") + "\\ninite.exe");
 
   Console.info("Downloaded your Ninite!");
   Console.info("Running your Ninite...");

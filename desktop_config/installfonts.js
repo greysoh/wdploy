@@ -1,21 +1,9 @@
 const { axiod } = await import("https://deno.land/x/axiod/mod.ts");
 const firaCodePath = await axiod.get("https://api.github.com/repos/tonsky/FiraCode/releases/latest");
 
-const firaCodeZip = await axiod.request({
-    method: 'GET',
-    url: firaCodePath.data.assets[0].browser_download_url,
-    responseType: 'arraybuffer',
-    responseEncoding: 'binary'
-});
+await Deployinator.downloadFile(firaCodePath.data.assets[0].browser_download_url, Deno.env.get("TEMP") + "\\firaCode.zip");
 
 Console.info("Downloaded FiraCode");
-Console.info("Writing zip file...");
-
-const data = new Uint8Array(firaCodeZip.data);
-
-const file = await Deno.create(Deno.env.get("TEMP") + "\\firaCode.zip");
-await Deno.writeAll(file, data);
-
 Console.info("Writing installer files...")
 
 await WindowsAPI.runBatch(WindowsAPI.invokeUAC(`cd "${Deno.env.get("TEMP")}"
