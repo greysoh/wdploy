@@ -90,7 +90,7 @@ export async function installWingetCMD(Package) {
 
   WingetLog.debug("Checking if winget is installed...");
   try {
-    await executeShell("wjinget --version");
+    await executeShell("winget --version");
     console.log("");
   } catch (e) {
     const prompt = await confirm("Winget is not installed. Do you want to install it?");
