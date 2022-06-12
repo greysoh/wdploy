@@ -1,3 +1,3 @@
 await WindowsAPI.runBatch(`@echo off
-git config --global user.name "greysoh"
-git config --global user.email "greysoh@pm.me"`);
+"C:\\Program Files\\Git\\bin\\git.exe" config --global user.name "greysoh"
+"C:\\Program Files\\Git\\bin\\git.exe" config --global user.email "greysoh@pm.me"`);

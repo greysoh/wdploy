@@ -1,4 +1,4 @@
-let wingetDeps = [
+const wingetDepsMain = [
   {
     path: "https://cdn.glitch.global/f59350b4-4fb2-4f0d-8c76-2905b1a7267f/vclibs.appx?v=1654974147031",
     name: "VCLibs.appx",
@@ -59,6 +59,8 @@ function executeShell(cmd) {
 }
 
 export async function installWinget() {
+  let wingetDeps = wingetDepsMain;
+  
   console.log("Locating winget...");
   let wingetPath = await get("https://api.github.com/repos/microsoft/winget-cli/releases/latest");
   wingetPath = JSON.parse(wingetPath).assets;
