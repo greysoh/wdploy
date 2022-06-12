@@ -4,6 +4,24 @@ import { ConsoleLogger } from "https://deno.land/x/unilogger@v1.0.3/mod.ts";
 import * as WindowsAPI from "./libs/WindowsAPI.js";
 import * as Deployinator from "./libs/Deployinator.js";
 
+async function isAlive(ip) {
+  try {
+      let data = await axiod({
+          method: "get",
+          url: ip,
+          timeout: 4060
+      });
+
+      if (data.data == undefined) {
+          return false;
+      } else {
+          return true;
+      }
+  } catch (e) {
+      return false;
+  }
+}
+
 const versionInfo = {
   version: "0.2.0"
 };
@@ -35,6 +53,12 @@ if (
   Deno.exit(1);
 } else if (Deno.args[0].startsWith("http")) {
   log.info("Fetching deploy JSON from URL");
+
+  if (!await isAlive(Deno.args[0])) {
+    log.error("We can't reach your URL. Please check your internet connection and try again.");
+    Deno.exit(0);
+  }
+
   json = await axiod.get(Deno.args[0]);
   json = json.data;
 
@@ -45,7 +69,21 @@ if (
   }
 } else {
   log.info("Fetching deploy JSON");
-  json = JSON.parse(await Deno.readTextFile(Deno.args[0]));
+  let file = "";
+
+  try {
+    file = Deno.readTextFileSync(Deno.args[0]);
+  } catch (e) {
+    log.error("Failed to read deploy JSON");
+    Deno.exit(2);
+  }
+
+  try {
+    json = JSON.parse(file);
+  } catch (e) {
+    log.error("Failed to parse deploy JSON");
+    Deno.exit(2);
+  }
 
   for (let i in json.path) {
     let path = Deno.args[0];
@@ -56,15 +94,20 @@ if (
 
 let functions = [];
 
+if (json.path == undefined) {
+  log.error("JSON file is empty. Exiting...");
+  Deno.exit(2);
+}
+
 for (let data of json.path) {
   if (data.path === undefined) {
     log.error("Deploy JSON is missing path");
-    Deno.exit(1);
+    continue;
   }
 
   if (data.name == undefined) {
     log.error("Deploy JSON is missing name");
-    Deno.exit(1);
+    continue;
   }
 
   if (data.path.startsWith("http")) {
@@ -83,16 +126,28 @@ for (let data of json.path) {
     if (path.startsWith("http")) {
         if (data.path.startsWith("http")) path = data.path;
 
+        if (!await isAlive(path)) {
+          log.error(`We can't reach your URL. Please check your internet connection and try again.`);
+          continue;
+        }
+
         const JSData = await axiod.get(path);
         let jsonModified = data;
 
-        jsonModified.func = new AsyncFunction("Console", "WindowsAPI", JSData.data);
+        jsonModified.func = new AsyncFunction("Console", "WindowsAPI", "Deployinator", JSData.data);
         functions.push(jsonModified);
     } else {
-        const file = await Deno.readTextFile(path);
+        let file = "";
         let jsonModified = data;
     
-        jsonModified.func = new AsyncFunction("Console", "WindowsAPI", file);
+        try {
+          file = Deno.readTextFileSync(path);
+        } catch (e) {
+          log.error(`Failed to read file ${path}`);
+          continue;
+        }
+
+        jsonModified.func = new AsyncFunction("Console", "WindowsAPI", "Deployinator", file);
         functions.push(jsonModified);
     }
   }
@@ -111,7 +166,7 @@ for (let i of functions) {
   });
 
   try {
-    await i.func(Console, WindowsAPI);
+    await i.func(Console, WindowsAPI, Deployinator);
   } catch (e) {
     log.error("Failed to finish execution of " + i.name);
     log.error(e);

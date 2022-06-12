@@ -2,7 +2,7 @@
     "path": [
         {
             "name": "slam",
-            "path": "slam.js"
+            "path": "03_slam.js"
         }
     ]
 }
