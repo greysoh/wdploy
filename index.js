@@ -117,3 +117,5 @@ for (let i of functions) {
     log.error(e);
   }
 }
+
+Deno.exit(0);

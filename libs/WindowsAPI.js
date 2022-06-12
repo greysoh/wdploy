@@ -4,10 +4,6 @@ import { downloadFile, sleep } from "./Deployinator.js";
 
 let isShellActive = false;
 
-function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
 /**
  * Executes shell command
  * @param {string} cmd Command you want to run

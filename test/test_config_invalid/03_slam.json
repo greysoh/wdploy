@@ -1,0 +1,8 @@
+{
+    "path": [
+        {
+            "name": "slam",
+            "path": "slam.js"
+        }
+    ]
+}

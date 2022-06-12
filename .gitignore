@@ -1,1 +1,6 @@
 wdploy.exe
+
+# Testing gitignore
+test/yarn.lock
+test/package-lock.json
+test/node_modules

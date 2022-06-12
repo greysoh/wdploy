@@ -1,0 +1,15 @@
+{
+  "name": "wdeploy-test",
+  "version": "1.0.0",
+  "description": "Tests wdeploy and it's responses",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest .",
+    "pretest": "cd .. && deno compile -A index.js && cd test"
+  },
+  "author": "greysoh",
+  "license": "BSD-3-Clause",
+  "dependencies": {
+    "jest": "^28.1.1"
+  }
+}
