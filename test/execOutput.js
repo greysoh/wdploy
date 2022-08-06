@@ -21,11 +21,4 @@ async function exec(cmd) {
   });
 }
 
-async function main() {
-    const { code, stdout, stderr } = await exec("wdploy.exe error");
-    console.log(`code: ${code}`);
-    console.log(`stdout: ${stdout}`);
-    console.log(`stderr: ${stderr}`);
-}
-
 module.exports = exec;
