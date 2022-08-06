@@ -100,13 +100,8 @@ if (json.path == undefined) {
 }
 
 for (let data of json.path) {
-  if (data.path === undefined) {
-    log.error("Deploy JSON is missing path");
-    continue;
-  }
-
-  if (data.name == undefined) {
-    log.error("Deploy JSON is missing name");
+  if (!data.path || !data.name) {
+    log.error("Deploy JSON is missing " + !data.path ? "path" : "name");
     continue;
   }
 
@@ -119,6 +114,10 @@ for (let data of json.path) {
     jsonModified.func = new AsyncFunction("Console", "WindowsAPI", file);
     functions.push(jsonModified);
   } else {
+    function genFunction(body) {
+      return new AsyncFunction("Console", "WindowsAPI", "Deployinator", body);
+    }
+
     log.info(`Fetching ${data.name}`);
     
     let path = data.rootURL + "/" + data.path;
@@ -134,7 +133,7 @@ for (let data of json.path) {
         const JSData = await axiod.get(path);
         let jsonModified = data;
 
-        jsonModified.func = new AsyncFunction("Console", "WindowsAPI", "Deployinator", JSData.data);
+        jsonModified.func = genFunction(JSData.data);
         functions.push(jsonModified);
     } else {
         let file = "";
@@ -147,7 +146,7 @@ for (let data of json.path) {
           continue;
         }
 
-        jsonModified.func = new AsyncFunction("Console", "WindowsAPI", "Deployinator", file);
+        jsonModified.func = genFunction(file);
         functions.push(jsonModified);
     }
   }

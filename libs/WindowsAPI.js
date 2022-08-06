@@ -1,5 +1,5 @@
 import { ConsoleLogger } from "https://deno.land/x/unilogger@v1.0.3/mod.ts";
-import { installWinget } from "./install_winget.js";
+import { installWinget } from "./wingetInstaller.js";
 import { downloadFile, sleep } from "./Deployinator.js";
 
 let isShellActive = false;
