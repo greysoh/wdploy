@@ -27,5 +27,5 @@ export async function downloadFile(source, destination) {
  * @returns {Promise} Promise that resolves after the time has passed
  */
 export function sleep(ms) {
-    return new Promise((resolve) => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }

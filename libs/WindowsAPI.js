@@ -1,42 +1,51 @@
 import { ConsoleLogger } from "https://deno.land/x/unilogger@v1.0.3/mod.ts";
 import { installWinget } from "./wingetInstaller.js";
-import { downloadFile, sleep } from "./Deployinator.js";
-
-let isShellActive = false;
+import { downloadFile } from "./Deployinator.js";
 
 /**
  * Executes shell command
  * @param {string} cmd Command you want to run
  * @returns {object} Status of command
  */
-export function executeShell(cmd) {
-  return new Promise(async (resolve, reject) => {
-    while (isShellActive) {
-      await sleep(100);
-    }
-    isShellActive = true;
-
-    let p = {};
-
-    while (true) {
-      try {
-        p = Deno.run({
-          cmd: cmd.split(" "),
-        });
-
-        break;
-      } catch (e) {
-        if (e.toString().startsWith("NotFound")) {
-          isShellActive = false;
-          return reject(e);
-        }
-      }
-    }
+ export function executeShell(cmd) {
+  return new Promise(async (resolve) => {
+    const p = Deno.run({
+      cmd: typeof cmd == "object" ? cmd : cmd.split(" ")
+    });
 
     const code = await p.status();
 
-    isShellActive = false;
-    resolve(code);
+    resolve({
+      status: code
+    });
+  });
+}
+
+/**
+ * Executes shell command, but the stdout and error is piped to you
+ * @param {string} cmd Command you want to run
+ * @returns {object} Status of command
+ */
+export function executePipedShell(cmd) {
+  return new Promise(async (resolve) => {
+    const p = Deno.run({
+      cmd: typeof cmd == "object" ? cmd : cmd.split(" "),
+      
+      stdout: "piped",
+      stderr: "piped",
+    });
+
+    const rawCode = await p.status();
+    
+    const rawOutput = await p.output();
+    const rawError = await p.stderrOutput();
+
+    resolve({
+      status: rawCode,
+
+      stdout: rawOutput,
+      stderr: rawError
+    });
   });
 }
 
@@ -52,7 +61,7 @@ export async function runBatch(string) {
   }
 
   Deno.writeTextFileSync(Deno.env.get("TEMP") + "\\runBatch.bat", string);
-  await executeShell(Deno.env.get("TEMP") + "\\runBatch.bat");
+  await executeShell(["cmd.exe", "/c", Deno.env.get("TEMP") + "\\runBatch.bat"]);
 }
 
 /**
@@ -69,8 +78,7 @@ export async function installWingetCMD(Package) {
 
   WingetLog.debug("Checking if winget is installed...");
   try {
-    await executeShell("winget --version");
-    console.log("");
+    await executePipedShell("winget --version");
   } catch (e) {
     const prompt = await confirm("Winget is not installed. Do you want to install it?");
       
@@ -90,7 +98,7 @@ export async function installWingetCMD(Package) {
     WingetLog.info(`Installing ${i}...`);
     let executeStatus = await executeShell(`winget install ${i}`);
 
-    if (!executeStatus.success) {
+    if (!executeStatus.code.success) {
       WingetLog.error(`Winget failed to install ${i}`);
     }
   }
@@ -215,6 +223,8 @@ export async function runReg(array) {
 
       return value;
     }
+
+    //batchScript += `reg ${i.type == "DELETE" ? "delete" : "add"} "${i.key}" ${}/f\n`;
 
     if (i.path == null && i.value == null && i.type == null) {
       batchScript += `reg add "${i.key}" /f\n`;
